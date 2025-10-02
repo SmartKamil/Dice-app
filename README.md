@@ -31,7 +31,7 @@ A React application for displaying DICE events at a particular venue. Built with
 
 1. Clone the repository:
 ```bash
-git clone git@github.com:SmartKamil/Dice-app.git
+git clone https://github.com/SmartKamil/Dice-app.git
 ```
 
 2. Navigate to the project directory:
