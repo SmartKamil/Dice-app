@@ -8,7 +8,7 @@ A React application for displaying DICE events at a particular venue. Built with
 - Responsive design (desktop, tablet, mobile)
 - Audio track indicators (play button)
 - Event badges (Featured, On Sale)
-- ♾️ Infinite scroll (automatically loads more events as you scroll)
+- Infinite scroll (automatically loads more events as you scroll)
 - Expandable "More Info" sections
 - Multiple ticket states (Book Now, Get Reminded, Sold Out)
 
@@ -29,22 +29,27 @@ A React application for displaying DICE events at a particular venue. Built with
 
 ### Installation
 
-1. Navigate to the project directory:
+1. Clone the repository:
 ```bash
-cd dice-events-app
+git clone git@github.com:SmartKamil/Dice-app.git
 ```
 
-2. Install dependencies (already done):
+2. Navigate to the project directory:
+```bash
+cd Dice-app/dice-events-app
+```
+
+3. Install dependencies:
 ```bash
 npm install
 ```
 
-3. Start the development server:
+4. Start the development server:
 ```bash
 npm run dev
 ```
 
-4. Open your browser and navigate to `http://localhost:5173`
+5. Open your browser and navigate to `http://localhost:5173`
 
 ## Usage
 
@@ -102,7 +107,3 @@ The built files will be in the `dist` directory.
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build
 - `npm run lint` - Run ESLint
-
-## License
-
-This is a technical exercise project.

@@ -14,3 +14,17 @@
     box-sizing: border-box;
   }
 }
+
+@layer utilities {
+  .perspective {
+    perspective: 20000px;
+  }
+  
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+}
+
+button {
+  cursor: pointer;
+}

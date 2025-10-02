@@ -1,4 +1,3 @@
-// Global audio manager to ensure only one audio plays at a time
 class AudioManager {
   private static instance: AudioManager;
   private currentAudio: HTMLAudioElement | null = null;
@@ -13,7 +12,6 @@ class AudioManager {
   }
 
   setCurrentAudio(audio: HTMLAudioElement | null) {
-    // Pause the previous audio if it exists
     if (this.currentAudio && this.currentAudio !== audio) {
       this.currentAudio.pause();
     }

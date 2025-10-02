@@ -6,13 +6,11 @@ interface PlayButtonProps {
 
 const PlayButton: React.FC<PlayButtonProps> = ({ onClick }) => {
   const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent event bubbling
+    e.stopPropagation();
     if (onClick) {
       onClick();
     } else {
-      // Default behavior: show alert or console log
       console.log('Play button clicked - audio track playback would start here');
-      // In a real implementation, this would play the audio track
     }
   };
 

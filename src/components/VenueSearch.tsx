@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { searchVenues } from '../services/api';
+import { useTheme } from '../context/ThemeContext';
 
 interface VenueSearchProps {
   onSearch: (venueName: string) => void;
@@ -7,6 +8,7 @@ interface VenueSearchProps {
 }
 
 const VenueSearch: React.FC<VenueSearchProps> = ({ onSearch, isLoading }) => {
+  const { themeMode } = useTheme();
   const [venueName, setVenueName] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -63,28 +65,44 @@ const VenueSearch: React.FC<VenueSearchProps> = ({ onSearch, isLoading }) => {
             }}
             onFocus={() => setShowSuggestions(true)}
             onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-            placeholder="Start typing venue name... (e.g., waiting, fabric)"
-            className="w-full px-4 py-3 border border-gray-300 focus:outline-none focus:border-dice-blue text-base"
+            placeholder="Start typing venue name... (e.g., room, bar)"
+            className={`w-full px-4 py-3 border focus:outline-none focus:border-dice-blue text-base transition-colors ${
+              themeMode === 'v2'
+                ? 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 dark:text-white dark:focus:border-dice-blue rounded-lg shadow-sm'
+                : 'border-gray-300 bg-white'
+            }`}
             disabled={isLoading}
           />
           
           {showSuggestions && venueName.trim().length >= 2 && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 shadow-lg rounded-md max-h-60 overflow-y-auto z-10">
+            <div className={`absolute top-full left-0 right-0 mt-1 shadow-lg rounded-md max-h-60 overflow-y-auto z-10 ${
+              themeMode === 'v2'
+                ? 'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600'
+                : 'bg-white border border-gray-300'
+            }`}>
               {isLoadingSuggestions ? (
-                <div className="px-4 py-3 text-gray-500 text-sm">Searching venues...</div>
+                <div className={`px-4 py-3 text-sm ${
+                  themeMode === 'v2' ? 'text-gray-500 dark:text-gray-400' : 'text-gray-500'
+                }`}>Searching venues...</div>
               ) : suggestions.length > 0 ? (
                 suggestions.map((venue, index) => (
                   <button
                     key={index}
                     type="button"
                     onClick={() => handleSuggestionClick(venue)}
-                    className="w-full text-left px-4 py-3 hover:bg-gray-100 transition-colors text-base border-b border-gray-100 last:border-b-0"
+                    className={`w-full text-left px-4 py-3 transition-colors text-base border-b last:border-b-0 cursor-pointer ${
+                      themeMode === 'v2'
+                        ? 'hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white border-gray-100 dark:border-gray-700'
+                        : 'hover:bg-gray-100 text-black border-gray-100'
+                    }`}
                   >
                     {venue}
                   </button>
                 ))
               ) : (
-                <div className="px-4 py-3 text-gray-500 text-sm">No venues found. Try different keywords.</div>
+                <div className={`px-4 py-3 text-sm ${
+                  themeMode === 'v2' ? 'text-gray-500 dark:text-gray-400' : 'text-gray-500'
+                }`}>No venues found. Try different keywords.</div>
               )}
             </div>
           )}
@@ -92,7 +110,9 @@ const VenueSearch: React.FC<VenueSearchProps> = ({ onSearch, isLoading }) => {
         
         <button
           type="submit"
-          className="px-8 py-3 bg-[#3C74FF] text-white text-sm uppercase tracking-wider font-normal hover:bg-[#2851CC] active:bg-[#1a3d99] transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed whitespace-nowrap"
+          className={`px-8 py-3 bg-[#3C74FF] text-white text-sm uppercase tracking-wider font-normal hover:bg-[#2851CC] active:bg-[#1a3d99] transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed whitespace-nowrap ${
+            themeMode === 'v2' ? 'rounded-lg shadow-md hover:shadow-lg' : ''
+          }`}
           disabled={isLoading || !venueName.trim()}
         >
           {isLoading ? 'Searching...' : 'Search'}
@@ -101,7 +121,7 @@ const VenueSearch: React.FC<VenueSearchProps> = ({ onSearch, isLoading }) => {
       
       {!venueName && (
         <div className="mt-4">
-          <p className="text-sm text-gray-600">Start typing to see venue suggestions</p>
+          <p className={`text-sm ${themeMode === 'v2' ? 'text-gray-600 dark:text-gray-400' : 'text-gray-600'}`}>Start typing to see venue suggestions</p>
         </div>
       )}
     </div>

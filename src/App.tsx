@@ -1,10 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import VenueSearch from './components/VenueSearch';
 import EventCard from './components/EventCard';
+import ThemeToggle from './components/ThemeToggle';
+import { useTheme } from './context/ThemeContext';
 import { fetchEvents, fetchMoreEvents, transformDiceEvent } from './services/api';
 import type { Event } from './types/event';
 
 function App() {
+  const { themeMode } = useTheme();
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -97,49 +101,93 @@ function App() {
   }, [hasMore, isLoadingMore, handleLoadMore]);
 
   return (
-    <div className="min-h-screen bg-white py-8 px-4 sm:px-6 md:px-8 lg:px-12">
+    <div className={`min-h-screen py-8 px-4 sm:px-6 md:px-8 lg:px-12 transition-colors duration-300 ${
+      themeMode === 'v2' 
+        ? 'bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800' 
+        : 'bg-white'
+    }`}>
+      <ThemeToggle />
+      
       <div className="max-w-[1280px] mx-auto">
-        <h1 className="text-2xl leading-7 mb-8">
-          Upcoming events at Venue
-        </h1>
+        {themeMode === 'v2' ? (
+          <motion.h1 
+            className="text-3xl md:text-4xl font-bold mb-8 bg-gradient-to-r from-[#3C74FF] to-[#8B5CF6] bg-clip-text text-transparent"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            Discover Amazing Events
+          </motion.h1>
+        ) : (
+          <h1 className="text-2xl leading-7 mb-8 text-black">
+            Upcoming events at Venue
+          </h1>
+        )}
 
         <VenueSearch onSearch={handleSearch} isLoading={isLoading} />
 
         {error && (
-          <div className="text-red-600 text-center mb-4 p-4 bg-red-50">
+          <motion.div 
+            className="text-red-600 dark:text-red-400 text-center mb-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+          >
             {error}
-          </div>
+          </motion.div>
         )}
 
         {isLoading && (
-          <div className="text-center py-12">
+          <motion.div 
+            className="text-center py-12"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-dice-blue"></div>
-            <p className="mt-4 text-gray-600">Loading events...</p>
-          </div>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">Loading events...</p>
+          </motion.div>
         )}
 
         {!isLoading && events.length === 0 && currentVenue && !error && (
-          <div className="text-center py-12 text-gray-600">
+          <motion.div 
+            className="text-center py-12 text-gray-600 dark:text-gray-400"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
             No events found for "{currentVenue}".
-          </div>
+          </motion.div>
         )}
 
         {!isLoading && events.length === 0 && !currentVenue && (
-          <div className="text-center py-12 text-gray-600">
+          <motion.div 
+            className="text-center py-12 text-gray-600 dark:text-gray-400"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
             Enter a venue name to see events
-          </div>
+          </motion.div>
         )}
 
         {events.length > 0 && (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12 justify-items-center sm:justify-items-start items-start">
+            <motion.div 
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12 justify-items-center sm:justify-items-start items-start perspective"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            >
               {events.map((event, index) => (
-                <EventCard 
-                  key={`${event.id}-${index}`} 
-                  event={event}
-                />
+                <motion.div
+                  key={`${event.id}-${index}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05, duration: 0.3 }}
+                >
+                  <EventCard 
+                    event={event}
+                  />
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
 
             {hasMore && (
               <div 
@@ -156,9 +204,13 @@ function App() {
             )}
 
             {!hasMore && events.length > 12 && (
-              <div className="text-center mt-12 py-8 text-gray-600">
+              <motion.div 
+                className="text-center mt-12 py-8 text-gray-600 dark:text-gray-400"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
                 <p>You've reached the end of the list</p>
-              </div>
+              </motion.div>
             )}
           </>
         )}

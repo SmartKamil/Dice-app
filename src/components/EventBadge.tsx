@@ -1,5 +1,6 @@
 import React from 'react';
 import { format } from 'date-fns';
+import { useTheme } from '../context/ThemeContext';
 
 interface EventBadgeProps {
   type: 'featured' | 'on_sale';
@@ -7,9 +8,15 @@ interface EventBadgeProps {
 }
 
 const EventBadge: React.FC<EventBadgeProps> = ({ type, saleDate }) => {
+  const { themeMode } = useTheme();
+
   if (type === 'featured') {
     return (
-      <div className="absolute top-4 right-4 bg-dice-blue px-2 py-1 text-white text-sm uppercase tracking-wider font-normal">
+      <div className={`absolute bg-[#3C74FF] px-2 py-1 text-white text-sm uppercase tracking-wider font-normal ${
+        themeMode === 'v2' 
+          ? 'top-4 right-4'
+          : 'bottom-4 right-4'
+      }`}>
         Featured
       </div>
     );

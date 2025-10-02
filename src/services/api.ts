@@ -1,5 +1,6 @@
 import axios from 'axios';
 import type { ApiResponse, Event } from '../types/event';
+import { apiCache } from '../utils/cache';
 
 const API_BASE_URL = 'https://events-api.dice.fm/v1/events';
 const API_KEY = 'dHmvC0ZXzF4h1mWldfur13c6s4Ix6wCF4OTzozXC';
@@ -15,41 +16,63 @@ export const fetchEvents = async (
   venueName: string,
   pageSize: number = 12
 ): Promise<ApiResponse> => {
+  const cacheKey = `events:${venueName}:${pageSize}:1`;
+  
+  const cached = apiCache.get<ApiResponse>(cacheKey);
+  if (cached) {
+    console.log('Using cached data for:', venueName);
+    return cached;
+  }
+
   const response = await apiClient.get('', {
     params: {
       'filter[venues]': venueName,
       'page[size]': pageSize,
     },
   });
+  
+  apiCache.set(cacheKey, response.data);
+  console.log('Cached new data for:', venueName);
+  
   return response.data;
 };
 
 export const searchVenues = async (query: string): Promise<string[]> => {
   try {
-    const response = await apiClient.get('', {
-      params: {
-        'page[size]': 100,
-      },
-    });
+    const cacheKey = `venues:search`;
     
-    if (!response.data.data || response.data.data.length === 0) {
-      return [];
+    let allVenues: string[];
+    const cached = apiCache.get<string[]>(cacheKey);
+    
+    if (cached) {
+      allVenues = cached;
+    } else {
+      const response = await apiClient.get('', {
+        params: {
+          'page[size]': 100,
+        },
+      });
+      
+      if (!response.data.data || response.data.data.length === 0) {
+        return [];
+      }
+      
+      const venueSet = new Set<string>();
+      response.data.data.forEach((event: any) => {
+        if (event.venues && event.venues.length > 0) {
+          event.venues.forEach((venue: any) => {
+            if (venue.name) {
+              venueSet.add(venue.name);
+            }
+          });
+        }
+      });
+      
+      allVenues = Array.from(venueSet);
+      apiCache.set(cacheKey, allVenues, 10 * 60 * 1000);
     }
     
-    const venueSet = new Set<string>();
-    response.data.data.forEach((event: any) => {
-      if (event.venues && event.venues.length > 0) {
-        event.venues.forEach((venue: any) => {
-          if (venue.name) {
-            venueSet.add(venue.name);
-          }
-        });
-      }
-    });
-    
-    const allVenues = Array.from(venueSet);
     const lowerQuery = query.toLowerCase();
-    
     const matchedVenues = allVenues.filter(venue => 
       venue.toLowerCase().includes(lowerQuery)
     );
@@ -65,6 +88,14 @@ export const fetchMoreEvents = async (
   pageNumber: number,
   pageSize: number = 12
 ): Promise<ApiResponse> => {
+  const cacheKey = `events:${venueName}:${pageSize}:${pageNumber}`;
+  
+  const cached = apiCache.get<ApiResponse>(cacheKey);
+  if (cached) {
+    console.log(`Using cached page ${pageNumber} for:`, venueName);
+    return cached;
+  }
+
   const response = await apiClient.get('', {
     params: {
       'filter[venues]': venueName,
@@ -72,15 +103,17 @@ export const fetchMoreEvents = async (
       'page[number]': pageNumber,
     },
   });
+  
+  apiCache.set(cacheKey, response.data);
+  console.log(`Cached page ${pageNumber} for:`, venueName);
+  
   return response.data;
 };
 
 export const transformDiceEvent = (diceEvent: any): Event => {
-  // Handle venue data
   let venueName = diceEvent.venue || 'Unknown Venue';
   let venueLocation = 'Unknown Location';
   
-  // Get location from venues array or location object
   if (diceEvent.venues && diceEvent.venues.length > 0) {
     const venue = diceEvent.venues[0];
     venueName = venue.name || venueName;
@@ -96,12 +129,10 @@ export const transformDiceEvent = (diceEvent: any): Event => {
     }
   }
 
-  // Handle ticket/price data
   let price: number | undefined;
   let currency = '£';
   let ticketTypes: any[] = [];
 
-  // Get currency from event level or convert GBP to symbol
   if (diceEvent.currency) {
     currency = diceEvent.currency === 'GBP' ? '£' : 
                 diceEvent.currency === 'USD' ? '$' : 
@@ -113,7 +144,6 @@ export const transformDiceEvent = (diceEvent: any): Event => {
     ticketTypes = diceEvent.ticket_types;
     const firstTicket = diceEvent.ticket_types[0];
     
-    // Price is in pence/cents, divide by 100
     if (firstTicket.price?.face_value) {
       price = firstTicket.price.face_value / 100;
     } else if (firstTicket.price?.total) {
@@ -121,30 +151,23 @@ export const transformDiceEvent = (diceEvent: any): Event => {
     }
   }
 
-  // Determine status based on API fields
   let status: 'available' | 'sold_out' | 'on_sale' = 'available';
   
-  // Check if sold out first
   if (diceEvent.sold_out === true) {
     status = 'sold_out';
   } else {
-    // Check if sale starts in the future
     const now = new Date();
     const saleStartDate = diceEvent.sale_start_date ? new Date(diceEvent.sale_start_date) : null;
     
     if (saleStartDate && saleStartDate > now) {
-      // Sale hasn't started yet - show "Get Reminded"
       status = 'on_sale';
     } else if (diceEvent.status === 'on-sale') {
-      // Sale is currently active - show "Book Now"
       status = 'available';
     } else {
-      // Default to available
       status = 'available';
     }
   }
 
-  // Parse lineup - could be array of objects with time/details
   let lineupArray: string[] = [];
   if (diceEvent.lineup && Array.isArray(diceEvent.lineup)) {
     lineupArray = diceEvent.lineup.map((item: any) => {
@@ -154,7 +177,6 @@ export const transformDiceEvent = (diceEvent: any): Event => {
     }).filter(Boolean);
   }
 
-  // Add artists to lineup if available
   if (diceEvent.artists && Array.isArray(diceEvent.artists)) {
     const artistNames = diceEvent.artists.map((a: any) => a.name || a).filter(Boolean);
     lineupArray = [...lineupArray, ...artistNames];
@@ -162,7 +184,7 @@ export const transformDiceEvent = (diceEvent: any): Event => {
 
   return {
     id: diceEvent.id || '',
-    name: diceEvent.name || 'Untitled Event',
+    name: diceEvent.name || '',
     date: diceEvent.date || '',
     venue: venueName,
     location: venueLocation,
@@ -185,7 +207,6 @@ export const transformDiceEvent = (diceEvent: any): Event => {
   };
 };
 
-// Imgix image optimization
 export const getOptimizedImageUrl = (url: string | undefined, width: number, height?: number): string => {
   if (!url) return '';
   
